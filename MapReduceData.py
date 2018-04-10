@@ -16,7 +16,7 @@ class MapReduceData:
     
     def map(self, f):
         if self.depth > 0:
-            ret_data = [d.map(f) for d in self.data.items()]
+            ret_data = dict((k, v.map(f)) for k, v in self.data.items())
             return MapReduceData(ret_data, self.depth)
         else:
             return MapReduceData(map(f, self.data))
@@ -25,7 +25,7 @@ class MapReduceData:
     def reduce(self, f, prefix=[]):
         prefix = typeCast.listify(prefix)
         if self.depth > 0:
-            ret_data = [d.reduce(f, prefix) for d in self.data.items()]
+            ret_data = dict((k, v.reduce(f, prefix)) for k, v in self.data.items())
             return MapReduceData(ret_data, self.depth-1)
         else:
             return reduce(f, prefix + self.data)
@@ -33,7 +33,7 @@ class MapReduceData:
         
     def filter(self, f):
         if self.depth > 0:
-            ret_data = [d.filter(f) for d in self.data.items()]
+            ret_data = dict((k, v.filter(f)) for k, v in self.data.items())
             return MapReduceData(ret_data, self.depth)
         else:
             return MapReduceData(filter(f, self.data))
@@ -41,7 +41,7 @@ class MapReduceData:
     
     def groupByKey(self, key):
         if self.depth > 1:
-            ret_data = [d.groupByKey(key) for d in self.data.items()]
+            ret_data = dict((k, v.groupByKey(key)) for k, v in self.data.items())
             return MapReduceData(ret_data, self.depth+1)
         else:
             #Get all possible value and create a dictionayr to store them
@@ -54,6 +54,10 @@ class MapReduceData:
             for k in di:
                 di[k] = MapReduceData(di[k])
             return MapReduceData(di, 1)
+    
+    
+    def getDataSet(self, keyList=[]):
+        
             
         
         
