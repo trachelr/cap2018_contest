@@ -1,10 +1,12 @@
 import platform
 import datetime
+import os
 
 import typeCast
 import MapReduceData
 
 import numpy as np
+import pickle as pkl
 
 from lxml import etree
 from functools import reduce
@@ -135,63 +137,75 @@ def defaultParserFunction_Cambridge(path):
                   .format(idData, len(data), (idData/len(data)*100)))
             
     #All done
-    return MapReduceData(data)
+    return data
 
 if __name__ == '__main__':
     #Use platform as os.uname() does not exist on Windows
     if platform.uname()[1] == 'DESKTOP-42C7TJ2':
         file_path = 'data/EF201403_selection59.xml'
+        parsed_path = 'data/Cambridge_parsed.pkl'
     else:
         file_path = 'EF201403_selection121.xml'
+        parsed_path = '' #TODO set a properparsed path
+        
+    if not os.path.isfile(parsed_path):
+        data = defaultParserFunction_Cambridge(file_path)
+        pkl.dump(data, open(parsed_path, 'wb'))
+    else:
+        data = pkl.load(open(parsed_path, 'rb'))
     
-    sentences, grades, levels, learners, indexes = [], [], [], [], []
-    s = ''
-    for event, elem in etree.iterparse(file_path,
-                                       html=True, events=('start', 'start-ns', 'end', 'end-ns')):
-        if elem.tag == 'writing':
-            elems = dict(elem.items())
-            level = int(elems['level'])
-            sample_id = int(elems['id'])
-            print('Parsing sample', sample_id)
-            for subelem in elem.getchildren():
-                if subelem.tag == 'learner':
-                    for key, val in subelem.items():
-                        if key == 'id':
-                            learn_id = int(val)
-                elif subelem.tag == 'grade':
-                    if subelem.text is not None:
-                        grade = float(subelem.text)
-                    else:
-                        continue
-                elif subelem.tag == 'text':
-                    if subelem.text is not None:
-                        # convert the text and filter out characters
-                        text_seq = text_to_word_sequence(subelem.text)
-                        s += subelem.text
-                    else:
-                        continue
-    
-            # append data if parsing went well...
-            sentences.append(text_seq)
-            grades.append(grade)
-            levels.append(level)
-            learners.append(learn_id)
-            indexes.append(sample_id)
-    
-    d = set(sentences[0])
-    for si in sentences:
-        d.update(si)
-    
-    word_list = list(d)
-    word_indices = dict((c, i) for i, c in enumerate(word_list))
-    indices_word = dict((i, c) for i, c in enumerate(word_list))
+    data = MapReduceData(data)
+        
     
     
-    MAX_LENGTH = 150
-    def blog_to_word_seq(blog):
-        blog_words = list(blog)
-        blog_words_indices = list(map(lambda char: word_indices[char], blog_words))
-        return sequence.pad_sequences([blog_words_indices], maxlen=MAX_LENGTH)[0]
+#    sentences, grades, levels, learners, indexes = [], [], [], [], []
+#    s = ''
+#    for event, elem in etree.iterparse(file_path,
+#                                       html=True, events=('start', 'start-ns', 'end', 'end-ns')):
+#        if elem.tag == 'writing':
+#            elems = dict(elem.items())
+#            level = int(elems['level'])
+#            sample_id = int(elems['id'])
+#            print('Parsing sample', sample_id)
+#            for subelem in elem.getchildren():
+#                if subelem.tag == 'learner':
+#                    for key, val in subelem.items():
+#                        if key == 'id':
+#                            learn_id = int(val)
+#                elif subelem.tag == 'grade':
+#                    if subelem.text is not None:
+#                        grade = float(subelem.text)
+#                    else:
+#                        continue
+#                elif subelem.tag == 'text':
+#                    if subelem.text is not None:
+#                        # convert the text and filter out characters
+#                        text_seq = text_to_word_sequence(subelem.text)
+#                        s += subelem.text
+#                    else:
+#                        continue
+#    
+#            # append data if parsing went well...
+#            sentences.append(text_seq)
+#            grades.append(grade)
+#            levels.append(level)
+#            learners.append(learn_id)
+#            indexes.append(sample_id)
+#    
+#    d = set(sentences[0])
+#    for si in sentences:
+#        d.update(si)
+#    
+#    word_list = list(d)
+#    word_indices = dict((c, i) for i, c in enumerate(word_list))
+#    indices_word = dict((i, c) for i, c in enumerate(word_list))
+#    
+#    
+#    MAX_LENGTH = 150
+#    def blog_to_word_seq(blog):
+#        blog_words = list(blog)
+#        blog_words_indices = list(map(lambda char: word_indices[char], blog_words))
+#        return sequence.pad_sequences([blog_words_indices], maxlen=MAX_LENGTH)[0]
     
     
     X, y = [], []
