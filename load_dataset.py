@@ -1,3 +1,14 @@
+import platform
+import datetime
+
+import typeCast
+import MapReduceData
+
+import numpy as np
+
+from lxml import etree
+from functools import reduce
+
 from keras.optimizers import SGD
 from keras.utils import np_utils
 from keras.models import Sequential
@@ -8,17 +19,8 @@ from keras.preprocessing import sequence
 from keras.callbacks import EarlyStopping
 
 from keras.preprocessing.text import one_hot, text_to_word_sequence
-from keras.preprocessing import sequence
 from sklearn.cross_validation import train_test_split
 
-import numpy as np
-#import xml.etree.ElementTree as etree
-from lxml import etree
-
-import platform
-import typeCast
-
-from functools import reduce
 
 #Default function for parsing Cambridge data
 def defaultParserFunction_Cambridge(path):
@@ -133,7 +135,7 @@ def defaultParserFunction_Cambridge(path):
                   .format(idData, len(data), (idData/len(data)*100)))
             
     #All done
-    return TextData(data)
+    return MapReduceData(data)
 
 #Use platform as os.uname() does not exist on Windows
 if platform.uname()[1] == 'DESKTOP-42C7TJ2':
