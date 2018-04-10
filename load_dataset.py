@@ -14,10 +14,19 @@ from sklearn.cross_validation import train_test_split
 import numpy as np
 #import xml.etree.ElementTree as etree
 from lxml import etree
+
+import platform
+
+#Use platform as os.uname() does not exist on Windows
+if platform.uname()[1] == 'DESKTOP-42C7TJ2':
+    file_path = 'data/EF201403_selection59.xml'
+else:
+    file_path = 'EF201403_selection121.xml'
+
 sentences, grades, levels, learners, indexes = [], [], [], [], []
 s = ''
-for event, elem in etree.iterparse('EF201403_selection121.xml',
-                                    html=True, events=('start', 'start-ns', 'end', 'end-ns')):
+for event, elem in etree.iterparse(file_path,
+                                   html=True, events=('start', 'start-ns', 'end', 'end-ns')):
     if elem.tag == 'writing':
         elems = dict(elem.items())
         level = int(elems['level'])
