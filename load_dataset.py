@@ -37,16 +37,27 @@ if __name__ == '__main__':
         
     if not os.path.isfile(parsed_path):
         data = parse_xml.parseXML(file_path, False)
+        print('Saving data')
         fp = open(parsed_path, 'w')
         json.dump(data, fp, cls=typeCast.NumpyEncoder)
         fp.close()
+        print('Done')
     else:
+        print('Loading data')
         fp = open(parsed_path, 'r')
         data = json.load(fp)
         fp.close()
+        #Json serialization break np.array into list. But lists tends to be less memory efficient.
+        #Thus we recreate the array structure first.
+        #In practice, this is mandatory to prevent OOM errors.
+        data = data.map(lambda x: dict( (k, np.array(v) if k == 'text' else v) for k, v in x.items()))
+        print('Done')
+  
+    assert False
     
     data = mrd.MapReduceData(data)
     data = data.selectKeys(['text', 'grade'])
+    
         
     
     
