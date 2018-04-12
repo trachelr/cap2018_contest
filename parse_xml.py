@@ -15,8 +15,8 @@ def parseWritingTag(writing):
     #All writing entry should follow the same hierarchy
     ret = {}
     attr = dict(writing.items())
-    ret['entry_id'] = attr['id']
-    ret['level'] = attr['level']
+    ret['entry_id'] = int(attr['id'])
+    ret['level'] = int(attr['level'])
     ret['unit'] = attr['unit']
     
     #Process child entries (text, learner, topic, date and grade)
@@ -72,7 +72,7 @@ def parseWritingTag(writing):
     
 
 def formatText(data):
-    ##Second pass, text formatting
+    ##Second pass, text data formating (i.e. raw text but also nationalities field)
     print('Aggregating text data')
     text_len = list(map(lambda d: len(d['text']), data))
     text_len = np.array(text_len)
@@ -82,14 +82,19 @@ def formatText(data):
     
     lexicon = reduce(typeCast.update_return, [set()] + list(map(lambda d: d['text'], data)))
     lexicon = list(lexicon)
+    nationalities = reduce(typeCast.update_return, [set()] + list(map(lambda d:d['nationality'], data)))
+    nationalities = list(nationalities)
     word_indices = dict((w, idx) for idx, w in enumerate(lexicon))
+    nat_indices = dict((n, idx) for idx, n in enumerate(nationalities))
     print('Lexicon size is {}'.format(len(lexicon)))
+    print('{} different nationalities found'.format(len(nationalities)))
     
     print('Formatting text data')
     report_freq = int(0.1 * len(data))
     for idData, d in enumerate(data):
         d['text'] = list(map(lambda w: word_indices[w], d['text']))
         d['text'] = sequence.pad_sequences([d['text']], maxlen=max_len)[0]
+        d['nationality'] = nat_indices[d['nationalitylity']]
         
         if idData % report_freq == 0:
             print('{} done over {} total ({:.2f}%)'\
@@ -97,7 +102,6 @@ def formatText(data):
             
     #All done
     return data
-    
 
 #Default function for parsing Cambridge data
 #Will either look for writing tags in XML tree or writings (notice the 's')
