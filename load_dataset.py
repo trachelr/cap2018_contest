@@ -1,11 +1,12 @@
 import platform
 import os
+import json
 
 import parse_xml
+import typeCast
 
 import MapReduceData as mrd
 import numpy as np
-import pickle as pkl
 
 from lxml import etree
 from functools import reduce
@@ -28,20 +29,24 @@ from sklearn.cross_validation import train_test_split
 if __name__ == '__main__':
     #Use platform as os.uname() does not exist on Windows
     if platform.uname()[1] == 'DESKTOP-42C7TJ2':
-        file_path = 'data/Cambridge_faulty.xml'
-        parsed_path = 'data/Cambridge_parsed.pkl'
+        file_path = 'data/Cambridge_cleaned.xml'
+        parsed_path = 'data/Cambridge_parsed.json'
     else:
         file_path = 'EF201403_selection121.xml'
         parsed_path = '' #TODO set a properparsed path
         
     if not os.path.isfile(parsed_path):
-        data = parse_xml.parseXML(file_path, True)
-        #pkl.dump(data, open(parsed_path, 'wb'))
+        data = parse_xml.parseXML(file_path, False)
+        fp = open(parsed_path, 'w')
+        json.dump(data, fp, cls=typeCast.NumpyEncoder)
+        fp.close()
     else:
-        pass
-        #data = pkl.load(open(parsed_path, 'rb'))
+        fp = open(parsed_path, 'r')
+        data = json.load(fp)
+        fp.close()
     
     data = mrd.MapReduceData(data)
+    data = data.selectKeys(['text', 'grade'])
         
     
     
