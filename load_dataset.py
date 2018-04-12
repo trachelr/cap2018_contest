@@ -7,6 +7,7 @@ import typeCast
 
 import MapReduceData as mrd
 import numpy as np
+import pandas as pd
 
 from lxml import etree
 from functools import reduce
@@ -31,32 +32,52 @@ if __name__ == '__main__':
     if platform.uname()[1] == 'DESKTOP-42C7TJ2':
         file_path = 'data/Cambridge_cleaned.xml'
         parsed_path = 'data/Cambridge_parsed.json'
+        dFrame_path = 'data/dataset.csv'
     else:
         file_path = 'EF201403_selection121.xml'
-        parsed_path = '' #TODO set a properparsed path
+        parsed_path = '' #TODO set a parsed path
+        dFrame_path = '' #TODO set a dataframe path
         
-    if not os.path.isfile(parsed_path):
-        data = parse_xml.parseXML(file_path, False)
-        print('Saving data')
-        fp = open(parsed_path, 'w')
-        json.dump(data, fp, cls=typeCast.NumpyEncoder)
-        fp.close()
+        
+    if not os.path.isfile(dFrame_path):
+        if not os.path.isfile(parsed_path):
+            data = parse_xml.parseXML(file_path, False)
+            print('Saving data')
+            fp = open(parsed_path, 'w')
+            json.dump(data, fp, cls=typeCast.NumpyEncoder)
+            fp.close()
+            print('Done')
+            data = mrd.MapReduceData(data)
+        else:
+            print('Loading data')
+            fp = open(parsed_path, 'r')
+            data = json.load(fp)
+            fp.close()
+            print('Done')
+            #Json serialization break np.array into list. But lists tends to be less memory efficient.
+            #Thus we recreate the array structure first.
+            #In practice, this is mandatory to prevent OOM errors.
+            print('Post load restructuration')
+            data = mrd.MapReduceData(data)
+            data = data.map(lambda x: dict( (k, np.array(v) if k == 'text' else v) for k, v in x.items()))
+            print('Done')
+        
+        print('Creating Dataset')
+        data = data.selectKeys(['entry_id', 'level', 'unit', 'learner_id', 'nationality', 'topic_id', 'grade', 'text'])
+        fn, ds = data.getDataSet()
+        print('Done')
+        
+        print('Saving Dataset')
+        df = pd.DataFrame(data=ds, columns=fn)
+        df.to_csv(dFrame_path, sep=';')
         print('Done')
     else:
-        print('Loading data')
-        fp = open(parsed_path, 'r')
-        data = json.load(fp)
-        fp.close()
-        #Json serialization break np.array into list. But lists tends to be less memory efficient.
-        #Thus we recreate the array structure first.
-        #In practice, this is mandatory to prevent OOM errors.
-        data = data.map(lambda x: dict( (k, np.array(v) if k == 'text' else v) for k, v in x.items()))
-        print('Done')
-  
+        df = pd.read_csv(dFrame_path)
+        
+        
     assert False
     
-    data = mrd.MapReduceData(data)
-    data = data.selectKeys(['text', 'grade'])
+    
     
         
     
