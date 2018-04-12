@@ -19,7 +19,7 @@ class MapReduceData:
             ret_data = dict((k, v.map(f)) for k, v in self.data.items())
             return MapReduceData(ret_data, self.depth)
         else:
-            return MapReduceData(map(f, self.data))
+            return MapReduceData(list(map(f, self.data)))
     
     
     def reduce(self, f, prefix=[]):
@@ -81,9 +81,12 @@ class MapReduceData:
             ret = np.vstack(ret)
             return fn, ret
         else:
-            self.flatten()
             fn = [k for k in self.data[0]]
-            ret = [list(sample.values()) for sample in self.data]
+            #Reduce dark magic
+            # _flatten_reduce() concatenate two element of a list into a np.array 
+            # (with a lot of sanity check and is robust to concatenating list element with an array)
+            ret = [reduce(self._flatten_reduce, [np.array([])] + list(sample.values())) for sample in self.data]
+            #ret = [list(sample.values()) for sample in self.data]
             ret = np.array(ret)
             return fn, ret
     
@@ -98,26 +101,11 @@ class MapReduceData:
             self._flatten_subroutine()
             return
     
-    def _flatten_subroutine(self):
-        reloop=True
-        while(reloop): #If a flatten happen, perform a recheck as more nested could have been uncovered
-            reloop=False
-            #Loop over all entries
-            for d in self.data:
-                to_add = []
-                to_remove = []
-                #Loop over the keys of an entry and check what to remove/add
-                for k in d:
-                    if type(d[k]) == type([]):
-                        reloop=True
-                        to_remove.append(k)
-                        for idx, x in enumerate(d[k]):
-                            to_add.append((k+'_{}'.format(idx)), x)
-                #Add and remove keys (you can't do this while iterating over the dictionary)
-                for k, v in to_add:
-                    d[k] = v
-                for k in to_remove:
-                    d.pop(k)
+    def _flatten_reduce(self, x, y):
+        return np.concatenate((x,
+                               y if type(y)==type(np.array([]))
+                               else np.array(typeCast.listify(y))
+                               ))
                     
         
         
