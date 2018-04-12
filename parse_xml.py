@@ -77,7 +77,7 @@ def formatText(data):
     text_len = list(map(lambda d: len(d['text']), data))
     text_len = np.array(text_len)
     max_len = int(text_len.mean()+3*text_len.std())
-    print('Average text length is: {:.2f} (std: {:.2f}, max: {:.2f}, min{:.2f}) setting MAX_LEN to {}'\
+    print('Average text length is: {:.2f} (std: {:.2f}, max: {:.2f}, min: {:.2f}) setting MAX_LEN to {}'\
           .format(text_len.mean(), text_len.std(), text_len.max(), text_len.min(), max_len))
     
     lexicon = reduce(typeCast.update_return, [set()] + list(map(lambda d: d['text'], data)))

@@ -56,7 +56,7 @@ class MapReduceData:
             return MapReduceData(di, 1)
         
     
-    def filterKeys(self, keyList=[]):
+    def selectKeys(self, keyList=[]):
         keyList = typeCast.listify(keyList)
         if len(keyList) == 0:
             return self
@@ -65,13 +65,13 @@ class MapReduceData:
             ret_data = dict((k, v.filterKeys(keyList))  for k, v in self.data.items())
             return MapReduceData(ret_data, self.depth)
         else:
-            return MapReduceData(map(lambda x: dict((k, v) for k, v in x.items() if k in keyList),
-                                     self.data))
+            return MapReduceData(list(map(lambda x: dict((k, v) for k, v in x.items() if k in keyList),
+                                     self.data)))
     
     
     def getDataSet(self, keyList=[]):
         if len(keyList) != 0:
-            return self.filterKeys(keyList).getDataSet()
+            return self.selectKeys(keyList).getDataSet()
         
         if self.depth > 0:
             ret = []
